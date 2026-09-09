@@ -1,0 +1,487 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "lenis/dist/lenis.css";
+
+/*
+ * `react-phone-number-input` ships its own default look (a plain native
+ * `<select>` and an unstyled `<input>`). These overrides fold its internals
+ * into the same bordered shell the other form fields use, rather than
+ * fighting two different visual languages side by side.
+ */
+.PhoneInputCountry {
+  margin-inline-end: 0.6rem;
+}
+
+.PhoneInputCountrySelect {
+  border-radius: 0.5rem;
+  outline: none;
+}
+
+.PhoneInputCountrySelect:focus-visible + .PhoneInputCountryIcon {
+  outline: 2px solid var(--color-ring);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+.PhoneInputCountryIcon {
+  border-radius: 0.2rem;
+  box-shadow: none;
+}
+
+/*
+ * Design tokens. The page ships a single, deliberately light look, so the
+ * palette is defined once on :root rather than swapped per colour scheme.
+ */
+:root {
+  color-scheme: light;
+
+  --radius: 1rem;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.205 0 0);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.205 0 0);
+
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.205 0 0);
+
+  /* emerald-600 / emerald-700 */
+  --primary: oklch(0.596 0.145 163.225);
+  --primary-hover: oklch(0.508 0.118 165.612);
+  --primary-foreground: oklch(0.985 0 0);
+
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+
+  /* EDF brand, sampled from the official logo. */
+  --brand-orange: #ff5e11;
+  --brand-navy: #07387a;
+
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.696 0.17 162.48);
+
+  /*
+   * Material 3 motion tokens, copied verbatim from
+   * `@material/web/tokens/versions/latest/sass/_md-sys-motion.scss`
+   * (Google Material 3, design-system version 34.0.21). "Emphasized" is the
+   * curve Google uses for its own product pages: a slow, weighted start that
+   * arrives fast and settles without overshoot.
+   */
+  --md-easing-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --md-easing-emphasized-decelerate: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --md-easing-emphasized-accelerate: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --md-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  --md-duration-short4: 200ms;
+  --md-duration-medium2: 300ms;
+  --md-duration-medium4: 400ms;
+  --md-duration-long2: 500ms;
+  --md-duration-extra-long1: 700ms;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand-orange: var(--brand-orange);
+  --color-brand-navy: var(--brand-navy);
+
+  --font-sans: var(--font-roboto), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 8px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Soft elevation used by the cards and the floating stats badge. */
+  --shadow-soft: 0 1px 2px rgb(16 24 40 / 0.04), 0 12px 32px -12px rgb(16 24 40 / 0.12);
+  --shadow-lift: 0 1px 2px rgb(16 24 40 / 0.05), 0 24px 48px -20px rgb(16 24 40 / 0.22);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /*
+   * Lenis drives scrolling itself; native smooth scrolling on top of it
+   * produces a double-eased, laggy feel.
+   */
+  html.lenis {
+    scroll-behavior: auto !important;
+  }
+
+  /* Scroll-margin so anchor targets clear the sticky header. */
+  :target {
+    scroll-margin-top: 6rem;
+  }
+}
+
+/* While the splash screen is up nothing behind it should scroll. */
+body[data-splash="visible"] {
+  overflow: hidden;
+}
+
+/*
+ * Reserve the scrollbar track permanently. The splash toggles the body between
+ * `overflow: hidden` and scrollable, and without a stable gutter that toggle
+ * changes the content width — every centred element shifts sideways the
+ * instant the overlay clears, which reads as the page jumping.
+ */
+html {
+  scrollbar-gutter: stable;
+}
+
+/*
+ * Promote the overlay so its fade is composited on the GPU. Otherwise the
+ * browser repaints the full-viewport white layer against the hero animating
+ * underneath it, which is what made the hand-off feel heavy on phones.
+ */
+[data-splash-overlay] {
+  will-change: opacity;
+  transform: translateZ(0);
+}
+
+/*
+ * Material 3 indeterminate linear progress indicator.
+ *
+ * Ported from `@material/web/progress/internal/_linear-progress.scss` — the
+ * keyframe percentages, offsets and easing curves are Google's, unchanged.
+ *
+ * The previous version of this was an SVG arc animating `stroke-dasharray`.
+ * That looked right but stuttered: dash properties are geometry, so every
+ * frame re-rasterises the path on the main thread, and any hitch there shows
+ * up as the arc lurching. Everything below animates `transform` only, which
+ * the compositor runs off the main thread — so it stays smooth even while the
+ * page is still parsing and hydrating, which is exactly when it is on screen.
+ *
+ * Two overlapping bars (primary and secondary) each translate while their
+ * inner element scales; the offset phases are what produce the characteristic
+ * Material sweep rather than a single bar ping-ponging.
+ */
+.m3-linear-progress {
+  position: relative;
+  overflow: hidden;
+  height: 4px;
+  border-radius: 9999px;
+  background: var(--color-border);
+  /* Animations are authored LTR; the container never flips. */
+  direction: ltr;
+}
+
+/*
+ * Longhands, not the `animation: 2s linear infinite` shorthand M3's own SCSS
+ * uses. A shorthand carrying no animation-name is normalised to
+ * `animation: none` by this build's CSS minifier, which silently threw away
+ * the duration and iteration count and left the bars frozen.
+ */
+.m3-lp-bar {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform-origin: left center;
+  animation-duration: 2s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.m3-lp-bar-inner {
+  position: absolute;
+  inset: 0;
+  background: var(--brand-orange);
+  animation-duration: 2s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+.m3-lp-primary {
+  inset-inline-start: -145.167%;
+  animation-name: m3-lp-primary-translate;
+}
+
+.m3-lp-primary > .m3-lp-bar-inner {
+  animation-name: m3-lp-primary-scale;
+}
+
+.m3-lp-secondary {
+  inset-inline-start: -54.8889%;
+  animation-name: m3-lp-secondary-translate;
+}
+
+.m3-lp-secondary > .m3-lp-bar-inner {
+  animation-name: m3-lp-secondary-scale;
+}
+
+@keyframes m3-lp-primary-translate {
+  0% {
+    transform: translateX(0px);
+  }
+  20% {
+    animation-timing-function: cubic-bezier(0.5, 0, 0.701732, 0.495819);
+    transform: translateX(0px);
+  }
+  59.15% {
+    animation-timing-function: cubic-bezier(0.302435, 0.381352, 0.55, 0.956352);
+    transform: translateX(83.6714%);
+  }
+  100% {
+    transform: translateX(200.611%);
+  }
+}
+
+@keyframes m3-lp-primary-scale {
+  0% {
+    transform: scaleX(0.08);
+  }
+  36.65% {
+    animation-timing-function: cubic-bezier(0.334731, 0.12482, 0.785844, 1);
+    transform: scaleX(0.08);
+  }
+  69.15% {
+    animation-timing-function: cubic-bezier(0.06, 0.11, 0.6, 1);
+    transform: scaleX(0.661479);
+  }
+  100% {
+    transform: scaleX(0.08);
+  }
+}
+
+@keyframes m3-lp-secondary-translate {
+  0% {
+    animation-timing-function: cubic-bezier(0.15, 0, 0.515058, 0.409685);
+    transform: translateX(0px);
+  }
+  25% {
+    animation-timing-function: cubic-bezier(0.31033, 0.284058, 0.8, 0.733712);
+    transform: translateX(37.6519%);
+  }
+  48.35% {
+    animation-timing-function: cubic-bezier(0.4, 0.627035, 0.6, 0.902026);
+    transform: translateX(84.3862%);
+  }
+  100% {
+    transform: translateX(160.278%);
+  }
+}
+
+@keyframes m3-lp-secondary-scale {
+  0% {
+    animation-timing-function: cubic-bezier(
+      0.205028,
+      0.057051,
+      0.57661,
+      0.453971
+    );
+    transform: scaleX(0.08);
+  }
+  19.15% {
+    animation-timing-function: cubic-bezier(
+      0.152313,
+      0.196432,
+      0.648374,
+      1.00432
+    );
+    transform: scaleX(0.457104);
+  }
+  44.15% {
+    animation-timing-function: cubic-bezier(
+      0.257759,
+      -0.003163,
+      0.211762,
+      1.38179
+    );
+    transform: scaleX(0.72796);
+  }
+  100% {
+    transform: scaleX(0.08);
+  }
+}
+
+/*
+ * Material 3 indeterminate circular progress — the small spinner shown inside
+ * a button while its action is pending.
+ *
+ * Ported from `@material/web/progress/internal/_circular-progress.scss`
+ * (the "M2-compatible" div/border variant, not the SVG one): two half-circles
+ * built from `border` are clipped by overflow, each expanding and contracting
+ * between 130° and 265° while the pair rotates in 135° increments, and that
+ * whole assembly is spun at a constant rate. Three layered animations, all
+ * `transform` — same reasoning as the linear bar above: transform is
+ * GPU-composited, so this stays smooth on a loaded main thread, which is
+ * exactly when a button spinner is on screen.
+ *
+ * Color comes from `currentColor`, so it inherits whatever text color the
+ * button already has (white on the primary green button) rather than needing
+ * its own theme prop.
+ */
+.m3-circular-progress {
+  --m3-cp-size: 20px;
+  position: relative;
+  display: inline-flex;
+  width: var(--m3-cp-size);
+  height: var(--m3-cp-size);
+}
+
+.m3-cp-progress {
+  position: absolute;
+  inset: 0;
+  animation: m3-cp-linear-rotate 1568.63ms linear infinite;
+}
+
+.m3-cp-spinner {
+  position: absolute;
+  inset: 0;
+  animation: m3-cp-rotate-arc 5332ms cubic-bezier(0.4, 0, 0.2, 1) infinite both;
+}
+
+.m3-cp-left {
+  position: absolute;
+  inset: 0 50% 0 0;
+  overflow: hidden;
+}
+
+.m3-cp-right {
+  position: absolute;
+  inset: 0 0 0 50%;
+  overflow: hidden;
+}
+
+.m3-cp-circle {
+  position: absolute;
+  inset: 0;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: solid calc(var(--m3-cp-size) * 0.1) currentColor;
+  border-color: currentColor currentColor transparent transparent;
+  animation: m3-cp-expand-arc 1333ms cubic-bezier(0.4, 0, 0.2, 1) infinite
+    both;
+}
+
+.m3-cp-left .m3-cp-circle {
+  inset: 0 -100% 0 0;
+  rotate: 135deg;
+}
+
+.m3-cp-right .m3-cp-circle {
+  inset: 0 0 0 -100%;
+  rotate: 100deg;
+  animation-delay: -666.5ms;
+}
+
+@keyframes m3-cp-expand-arc {
+  0% {
+    transform: rotate(265deg);
+  }
+  50% {
+    transform: rotate(130deg);
+  }
+  100% {
+    transform: rotate(265deg);
+  }
+}
+
+@keyframes m3-cp-rotate-arc {
+  12.5% {
+    transform: rotate(135deg);
+  }
+  25% {
+    transform: rotate(270deg);
+  }
+  37.5% {
+    transform: rotate(405deg);
+  }
+  50% {
+    transform: rotate(540deg);
+  }
+  62.5% {
+    transform: rotate(675deg);
+  }
+  75% {
+    transform: rotate(810deg);
+  }
+  87.5% {
+    transform: rotate(945deg);
+  }
+  100% {
+    transform: rotate(1080deg);
+  }
+}
+
+@keyframes m3-cp-linear-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/*
+ * Reduced motion.
+ *
+ * This used to be a blanket `*` rule forcing every animation and transition to
+ * 0.01ms, which is far more than the preference asks for: it also froze the
+ * loading spinner mid-sweep and made the FAQ accordion snap open, so the page
+ * read as broken rather than as calm. What the preference is actually about is
+ * large spatial movement — travel across the viewport, parallax, and anything
+ * looping forever in the corner of the eye.
+ *
+ * So: kill the decorative spatial motion, keep the functional feedback. Colour
+ * and opacity transitions, the accordion's height change and the busy
+ * indicator all survive, because removing them costs comprehension without
+ * buying any comfort.
+ */
+@media (prefers-reduced-motion: reduce) {
+  /*
+   * Only the CSS-driven motion is handled here; everything else on the page is
+   * animated by Motion in JavaScript and reads the same preference through
+   * `useReducedMotion()`, where it degrades to a short fade.
+   *
+   * The progress bar keeps running. It is a status indicator, not decoration —
+   * a frozen one tells the visitor the page has hung. Slowed down, though.
+   */
+  .m3-lp-bar,
+  .m3-lp-bar-inner {
+    animation-duration: 3s;
+  }
+
+  /* Same reasoning: a button spinner that stops reads as a hung button. */
+  .m3-cp-progress,
+  .m3-cp-spinner,
+  .m3-cp-circle {
+    animation-duration: 1.8s;
+  }
+}
